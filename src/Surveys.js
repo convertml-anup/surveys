@@ -25,7 +25,7 @@ function Surveys() {
 
         <div className="feature-card analytics">
           <div className="feature-icon">📚</div>
-          <h3 className="feature-title">Survey Library</h3>
+          <h3 className="feature-title">Survey Project</h3>
           <p className="feature-description">Access pre-built templates and manage your survey collection</p>
         </div>
 

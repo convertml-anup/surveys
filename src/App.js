@@ -1,7 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faChartBar, faClipboardList, faPhone, faBook, faCog } from '@fortawesome/free-solid-svg-icons';
+import axios from 'axios';
+import { Snackbar, Alert } from '@mui/material';
 import './styles.css';
 import Dashboard from './Dashboard';
- import 'survey-core/survey-core.css';
+import SurveyAnalytics from './SurveyAnalytics';
+import SurveyProject from './SurveyProject';
+import SurveyView from './SurveyView';
+import SurveyResults from './SurveyResults';
+import 'survey-core/survey-core.css';
 import 'survey-creator-core/survey-creator-core.css';
 import { SurveyCreator, SurveyCreatorComponent } from "survey-creator-react";
 
@@ -74,25 +83,63 @@ const surveyJson = {
         visibleIf: "{satisfaction-score} <= 2"
     }]
 };
-function App({ config = {} }) {
-  const [expandedMenus, setExpandedMenus] = useState({ 'Surveys': true });
-  const [activeSubMenuItem, setActiveSubMenuItem] = useState('Create Survey');
-  const [showSurveys, setShowSurveys] = useState(false);
-
-
-  const [showSurveyCreator, setShowSurveyCreator] = React.useState(false);
+function SurveyCreatorPage({ config = {} }) {
+  const [toast, setToast] = useState({ open: false, message: '', severity: 'success' });
   const creator = new SurveyCreator();
-  
-  // Use provided survey JSON or default
   const finalSurveyJson = config.surveyJson || surveyJson;
   creator.JSON = finalSurveyJson;
   
-  // Apply configuration options
+  creator.saveSurveyFunc = async (saveNo, callback) => {
+    try {
+      const surveyData = {
+        title: creator.JSON.title || 'Untitled Survey',
+        description: creator.JSON.description || '',
+        surveyJson: creator.JSON
+      };
+      
+      await axios.post('http://localhost:5000/api/surveys', surveyData);
+      callback(saveNo, true);
+      setToast({ open: true, message: 'Survey saved successfully!', severity: 'success' });
+    } catch (error) {
+      console.error('Error saving survey:', error);
+      callback(saveNo, false);
+      setToast({ open: true, message: 'Error saving survey', severity: 'error' });
+    }
+  };
+  
   if (config.onSurveyComplete) {
     creator.onSurveyInstanceCreated.add((sender, options) => {
       options.survey.onComplete.add(config.onSurveyComplete);
     });
   }
+  
+  return (
+    <div className="main-content">
+      <SurveyCreatorComponent creator={creator} />
+      <Snackbar 
+        open={toast.open} 
+        autoHideDuration={3000} 
+        onClose={() => setToast({ ...toast, open: false })}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert 
+          onClose={() => setToast({ ...toast, open: false })} 
+          severity={toast.severity}
+          variant="filled"
+        >
+          {toast.message}
+        </Alert>
+      </Snackbar>
+    </div>
+  );
+}
+
+function Sidebar() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [expandedMenus, setExpandedMenus] = useState({ 'Surveys': true });
+
+
   
   const toggleSubMenu = (menuName) => {
     setExpandedMenus(prev => ({
@@ -101,12 +148,23 @@ function App({ config = {} }) {
     }));
   };
 
+  const getActiveSubMenuItem = () => {
+    if (location.pathname === '/create-survey') return 'Create Survey';
+    if (location.pathname === '/survey-project') return 'Survey Project';
+    if (location.pathname === '/dashboard') return 'Dashboard';
+    if (location.pathname === '/survey-analytics') return 'Survey Analytics';
+    return 'Dashboard';
+  };
+
   const handleSubMenuClick = (item) => {
-    setActiveSubMenuItem(item);
     if (item === 'Create Survey') {
-      setShowSurveys(true);
+      navigate('/create-survey');
+    } else if (item === 'Survey Project') {
+      navigate('/survey-project');
     } else if (item === 'Dashboard') {
-      setShowSurveys(false);
+      navigate('/dashboard');
+    } else if (item === 'Survey Analytics') {
+      navigate('/survey-analytics');
     }
   };
 
@@ -114,7 +172,7 @@ function App({ config = {} }) {
     <div>
       <div className="sidebar">
         <div className="logo">
-          <div className="logo-icon">📊</div>
+          <div className="logo-icon"><FontAwesomeIcon icon={faChartBar} /></div>
           <div className="logo-text">ConvertML</div>
         </div>
         
@@ -122,12 +180,12 @@ function App({ config = {} }) {
           <ul className="nav-menu">
             <li className="nav-item">
               <div className={`nav-link has-children ${expandedMenus['Surveys'] ? 'expanded' : ''} active`} onClick={() => toggleSubMenu('Surveys')}>
-                <span className="nav-icon">📋</span>
+                <span className="nav-icon"><FontAwesomeIcon icon={faClipboardList} /></span>
                 Surveys
               </div>
               <ul className={`sub-menu ${expandedMenus['Surveys'] ? 'expanded' : ''}`}>
-                {['Create Survey', 'Survey Library', 'Survey Distribution', 'Survey Responses', 'Survey Settings'].map(item => (
-                  <li key={item} className={`sub-menu-item ${activeSubMenuItem === item ? 'active' : ''}`} onClick={() => handleSubMenuClick(item)}>
+                {['Create Survey', 'Survey Project', 'Survey Distribution', 'Survey Responses', 'Survey Settings'].map(item => (
+                  <li key={item} className={`sub-menu-item ${getActiveSubMenuItem() === item ? 'active' : ''}`} onClick={() => handleSubMenuClick(item)}>
                     {item}
                   </li>
                 ))}
@@ -135,12 +193,12 @@ function App({ config = {} }) {
             </li>
             <li className="nav-item">
               <div className={`nav-link has-children ${expandedMenus['Analytics'] ? 'expanded' : ''}`} onClick={() => toggleSubMenu('Analytics')}>
-                <span className="nav-icon">📊</span>
+                <span className="nav-icon"><FontAwesomeIcon icon={faChartBar} /></span>
                 Analytics
               </div>
               <ul className={`sub-menu ${expandedMenus['Analytics'] ? 'expanded' : ''}`}>
-                {['Dashboard', 'Reports Generation', 'Segmentation & Take Action'].map(item => (
-                  <li key={item} className={`sub-menu-item ${activeSubMenuItem === item ? 'active' : ''}`} onClick={() => handleSubMenuClick(item)}>
+                {['Dashboard', 'Survey Analytics', 'Reports Generation', 'Segmentation & Take Action'].map(item => (
+                  <li key={item} className={`sub-menu-item ${getActiveSubMenuItem() === item ? 'active' : ''}`} onClick={() => handleSubMenuClick(item)}>
                     {item}
                   </li>
                 ))}
@@ -148,12 +206,12 @@ function App({ config = {} }) {
             </li>
             <li className="nav-item">
               <div className={`nav-link has-children ${expandedMenus['Callbacks'] ? 'expanded' : ''}`} onClick={() => toggleSubMenu('Callbacks')}>
-                <span className="nav-icon">📞</span>
+                <span className="nav-icon"><FontAwesomeIcon icon={faPhone} /></span>
                 Callbacks
               </div>
               <ul className={`sub-menu ${expandedMenus['Callbacks'] ? 'expanded' : ''}`}>
                 {['Callback Requests', 'Callback Scheduler', 'Call History'].map(item => (
-                  <li key={item} className={`sub-menu-item ${activeSubMenuItem === item ? 'active' : ''}`} onClick={() => handleSubMenuClick(item)}>
+                  <li key={item} className={`sub-menu-item ${getActiveSubMenuItem() === item ? 'active' : ''}`} onClick={() => handleSubMenuClick(item)}>
                     {item}
                   </li>
                 ))}
@@ -161,12 +219,12 @@ function App({ config = {} }) {
             </li>
             <li className="nav-item">
               <div className={`nav-link has-children ${expandedMenus['Resources'] ? 'expanded' : ''}`} onClick={() => toggleSubMenu('Resources')}>
-                <span className="nav-icon">📚</span>
+                <span className="nav-icon"><FontAwesomeIcon icon={faBook} /></span>
                 Resources
               </div>
               <ul className={`sub-menu ${expandedMenus['Resources'] ? 'expanded' : ''}`}>
                 {['Guides & Tutorials', 'Help Center', 'Community & Support'].map(item => (
-                  <li key={item} className={`sub-menu-item ${activeSubMenuItem === item ? 'active' : ''}`} onClick={() => handleSubMenuClick(item)}>
+                  <li key={item} className={`sub-menu-item ${getActiveSubMenuItem() === item ? 'active' : ''}`} onClick={() => handleSubMenuClick(item)}>
                     {item}
                   </li>
                 ))}
@@ -174,12 +232,12 @@ function App({ config = {} }) {
             </li>
             <li className="nav-item">
               <div className={`nav-link has-children ${expandedMenus['Settings'] ? 'expanded' : ''}`} onClick={() => toggleSubMenu('Settings')}>
-                <span className="nav-icon">⚙️</span>
+                <span className="nav-icon"><FontAwesomeIcon icon={faCog} /></span>
                 Settings
               </div>
               <ul className={`sub-menu ${expandedMenus['Settings'] ? 'expanded' : ''}`}>
                 {['User Profile', 'Team Management', 'Integrations', 'Billing & Usage'].map(item => (
-                  <li key={item} className={`sub-menu-item ${activeSubMenuItem === item ? 'active' : ''}`} onClick={() => handleSubMenuClick(item)}>
+                  <li key={item} className={`sub-menu-item ${getActiveSubMenuItem() === item ? 'active' : ''}`} onClick={() => handleSubMenuClick(item)}>
                     {item}
                   </li>
                 ))}
@@ -188,10 +246,35 @@ function App({ config = {} }) {
           </ul>
         </nav>
       </div>
-      {showSurveys ? (
-        <div className="main-content">  <SurveyCreatorComponent creator={creator} /> </div>
-      ) : <Dashboard />}
     </div>
+  );
+}
+
+function AppContent({ config }) {
+  const location = useLocation();
+  const isSurveyView = location.pathname.startsWith('/survey/');
+
+  return (
+    <div>
+      {!isSurveyView && <Sidebar />}
+      <Routes>
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/create-survey" element={<SurveyCreatorPage config={config} />} />
+        <Route path="/survey-project" element={<SurveyProject />} />
+        <Route path="/survey-analytics" element={<SurveyAnalytics />} />
+        <Route path="/survey/:id" element={<SurveyView />} />
+        <Route path="/survey-results/:id" element={<SurveyResults />} />
+      </Routes>
+    </div>
+  );
+}
+
+function App({ config = {} }) {
+  return (
+    <Router>
+      <AppContent config={config} />
+    </Router>
   );
 }
 
