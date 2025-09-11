@@ -10,6 +10,7 @@ import SurveyAnalytics from './SurveyAnalytics';
 import SurveyProject from './SurveyProject';
 import SurveyView from './SurveyView';
 import SurveyResults from './SurveyResults';
+import SurveyHierarchy from './SurveyHierarchy';
 import 'survey-core/survey-core.css';
 import 'survey-creator-core/survey-creator-core.css';
 import { SurveyCreator, SurveyCreatorComponent } from "survey-creator-react";
@@ -138,6 +139,7 @@ function Sidebar() {
   const navigate = useNavigate();
   const location = useLocation();
   const [expandedMenus, setExpandedMenus] = useState({ 'Surveys': true });
+  const [showHierarchy, setShowHierarchy] = useState(false);
 
 
   
@@ -150,6 +152,7 @@ function Sidebar() {
 
   const getActiveSubMenuItem = () => {
     if (location.pathname === '/create-survey') return 'Create Survey';
+    if (location.pathname === '/survey-management') return 'Survey Management';
     if (location.pathname === '/survey-project') return 'Survey Management';
     if (location.pathname === '/dashboard') return 'Dashboard';
     if (location.pathname === '/survey-analytics') return 'Survey Analytics';
@@ -160,7 +163,7 @@ function Sidebar() {
     if (item === 'Create Survey') {
       navigate('/create-survey');
     } else if (item === 'Survey Management') {
-      navigate('/survey-project');
+      setShowHierarchy(!showHierarchy);
     } else if (item === 'Dashboard') {
       navigate('/dashboard');
     } else if (item === 'Survey Analytics') {
@@ -246,6 +249,21 @@ function Sidebar() {
           </ul>
         </nav>
       </div>
+      {showHierarchy && (
+        <div style={{
+          position: 'fixed',
+          left: '280px',
+          top: '0',
+          width: '384px',
+          height: '100vh',
+          backgroundColor: 'white',
+          borderRight: '1px solid #e5e7eb',
+          zIndex: 1000,
+          boxShadow: '2px 0 8px rgba(0,0,0,0.1)'
+        }}>
+          <SurveyHierarchy onClose={() => setShowHierarchy(false)} />
+        </div>
+      )}
     </div>
   );
 }
@@ -261,6 +279,7 @@ function AppContent({ config }) {
         <Route path="/" element={<Dashboard />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/create-survey" element={<SurveyCreatorPage config={config} />} />
+
         <Route path="/survey-project" element={<SurveyProject />} />
         <Route path="/survey-analytics" element={<SurveyAnalytics />} />
         <Route path="/survey/:id" element={<SurveyView />} />

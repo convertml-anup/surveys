@@ -1,8 +1,10 @@
 import React, { useState } from "react";
+import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faStore, faBuilding, faIndustry, faUniversity, faHospital, faSchool, faBriefcase, faDollarSign, faCreditCard, faGem, faWrench, faCog, faHammer, faCar, faTruck, faPlane, faShip, faTrain, faPhone, faLaptop, faChartBar, faChartLine, faChartPie, faPlus, faArrowUp } from '@fortawesome/free-solid-svg-icons';
 
-const SurveyHierarchy = () => {
+const SurveyHierarchy = ({ onClose }) => {
+  const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState("");
   const [modalData, setModalData] = useState({});
@@ -121,6 +123,18 @@ const SurveyHierarchy = () => {
     );
   };
 
+  const getTouchpointPath = (touchpointId) => {
+    for (const vertical of hierarchy) {
+      for (const lob of vertical.children) {
+        const touchpoint = lob.children.find(tp => tp.id === touchpointId);
+        if (touchpoint) {
+          return [vertical.name, lob.name, touchpoint.name];
+        }
+      }
+    }
+    return ['Retail', 'Two-Wheeler Loan', 'Dealer Walk-In'];
+  };
+
   const addTouchpoint = (verticalId, lobId, name = null) => {
     if (!name) {
       openModal("touchpoint", { verticalId, lobId });
@@ -149,7 +163,12 @@ const SurveyHierarchy = () => {
   };
 
   const toggleExpand = (id, type) => {
-    if (type === "touchpoint") return;
+    if (type === "touchpoint") {
+      const touchpointPath = getTouchpointPath(id);
+      if (onClose) onClose();
+      navigate('/survey-project', { state: { breadcrumb: touchpointPath } });
+      return;
+    }
     
     const updateNode = (nodes) => {
       return nodes.map((node) => {
@@ -172,7 +191,9 @@ const SurveyHierarchy = () => {
         {nodes.map((node) => (
           <li key={node.id} className="mb-1">
             <div
-              className="tree-toggle flex items-center gap-2 p-2 cursor-pointer rounded text-gray-700 font-medium hover:bg-gray-100"
+              className={`tree-toggle flex items-center gap-2 p-2 cursor-pointer rounded font-medium hover:bg-gray-100 ${
+                node.type === "touchpoint" ? "text-blue-600 hover:bg-blue-50" : "text-gray-700"
+              }`}
               style={{ paddingLeft: `${16 + level * 24}px` }}
               onClick={() => toggleExpand(node.id, node.type)}
             >
@@ -236,6 +257,9 @@ const SurveyHierarchy = () => {
         <h2 className="font-semibold text-lg text-gray-800">
           Survey Hierarchy
         </h2>
+        {onClose && (
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer' }}>×</button>
+        )}
       </div>
 
       <div style={{ flex: 1, overflowY: "auto", padding: "0 16px" }}>
@@ -285,68 +309,64 @@ const SurveyHierarchy = () => {
             boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
             width: "320px"
           }}>
-            <h3 style={{ fontSize: "18px", fontWeight: "600", marginBottom: "16px" }}>
+            <h3 style={{ fontSize: "18px", fontWeight: "600", color: "#1e293b", marginBottom: "16px" }}>
               Add {modalType === "vertical" ? "Business Vertical" : modalType === "lob" ? "Line of Business" : "Touchpoint"}
             </h3>
+            
             {modalType === "vertical" && (
               <div style={{ marginBottom: "16px" }}>
-                <label style={{ display: "block", marginBottom: "8px", fontSize: "14px", fontWeight: "500" }}>Icon</label>
-                <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-                  <div style={{
-                    width: "40px",
-                    height: "40px",
-                    border: "1px solid #d1d5db",
-                    borderRadius: "4px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    backgroundColor: "#f9fafb"
-                  }}>
-                    <FontAwesomeIcon icon={selectedIcon} style={{ fontSize: "16px", color: "#374151" }} />
-                  </div>
-                  <select
-                    value={iconOptions.findIndex(opt => opt.icon === selectedIcon)}
-                    onChange={(e) => setSelectedIcon(iconOptions[e.target.value].icon)}
-                    style={{
-                      flex: 1,
-                      padding: "8px",
-                      border: "1px solid #d1d5db",
-                      borderRadius: "4px",
-                      outline: "none",
-                      fontSize: "14px"
-                    }}
-                  >
-                    {iconOptions.map((option, index) => (
-                      <option key={index} value={index}>{option.name}</option>
-                    ))}
-                  </select>
+                <label style={{ display: "block", marginBottom: "8px", fontSize: "14px", fontWeight: "500", color: "#374151" }}>Select Icon:</label>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: "8px", marginBottom: "16px" }}>
+                  {iconOptions.map((option, index) => (
+                    <div
+                      key={index}
+                      style={{
+                        padding: "8px",
+                        border: selectedIcon === option.icon ? "2px solid #2563eb" : "1px solid #d1d5db",
+                        borderRadius: "6px",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        backgroundColor: selectedIcon === option.icon ? "#eff6ff" : "white"
+                      }}
+                      onClick={() => setSelectedIcon(option.icon)}
+                    >
+                      <FontAwesomeIcon icon={option.icon} style={{ fontSize: "16px", color: selectedIcon === option.icon ? "#2563eb" : "#6b7280" }} />
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
+            
             <input
               type="text"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
-              placeholder={`Enter ${modalType === "vertical" ? "Business Vertical" : modalType === "lob" ? "Line of Business" : "Touchpoint"} name`}
+              placeholder={`Enter ${modalType === "vertical" ? "vertical" : modalType === "lob" ? "line of business" : "touchpoint"} name`}
               style={{
                 width: "100%",
-                padding: "8px",
+                padding: "12px",
                 border: "1px solid #d1d5db",
-                borderRadius: "4px",
-                marginBottom: "16px",
+                borderRadius: "6px",
+                fontSize: "14px",
+                marginBottom: "20px",
                 outline: "none"
               }}
-              autoFocus
+              onKeyPress={(e) => e.key === "Enter" && handleSubmit()}
             />
-            <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>
+            
+            <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
               <button
                 onClick={closeModal}
                 style={{
-                  padding: "8px 16px",
-                  color: "#6b7280",
-                  border: "1px solid #d1d5db",
-                  borderRadius: "4px",
-                  backgroundColor: "white",
+                  padding: "10px 20px",
+                  backgroundColor: "#f3f4f6",
+                  color: "#374151",
+                  border: "none",
+                  borderRadius: "6px",
+                  fontSize: "14px",
+                  fontWeight: "500",
                   cursor: "pointer"
                 }}
               >
@@ -355,11 +375,13 @@ const SurveyHierarchy = () => {
               <button
                 onClick={handleSubmit}
                 style={{
-                  padding: "8px 16px",
+                  padding: "10px 20px",
                   backgroundColor: "#2563eb",
                   color: "white",
                   border: "none",
-                  borderRadius: "4px",
+                  borderRadius: "6px",
+                  fontSize: "14px",
+                  fontWeight: "500",
                   cursor: "pointer"
                 }}
               >

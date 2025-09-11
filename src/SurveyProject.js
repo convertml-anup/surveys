@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlay, faStop, faTrash, faChartBar, faCopy, faChevronLeft, faChevronRight, faPlus } from '@fortawesome/free-solid-svg-icons';
@@ -23,21 +23,27 @@ import {
   IconButton,
   Tooltip
 } from '@mui/material';
-import SurveyHierarchy from './SurveyHierarchy';
+
 
 function SurveyProject() {
   const [surveys, setSurveys] = useState([]);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState({ open: false, message: '', severity: 'success' });
   const [deleteDialog, setDeleteDialog] = useState({ open: false, survey: null });
-
   const [expandedItems, setExpandedItems] = useState({});
-  const [selectedPath, setSelectedPath] = useState(['Retail', 'Two-Wheeler Loan', 'Dealer Walk-In']);
   const navigate = useNavigate();
+  const location = useLocation();
+  const [selectedPath, setSelectedPath] = useState(location.state?.breadcrumb || ['Retail', 'Two-Wheeler Loan', 'Dealer Walk-In']);
 
   useEffect(() => {
     fetchSurveys();
   }, []);
+
+  useEffect(() => {
+    if (location.state?.breadcrumb) {
+      setSelectedPath(location.state.breadcrumb);
+    }
+  }, [location.state]);
 
   const fetchSurveys = async () => {
     try {
@@ -126,22 +132,19 @@ function SurveyProject() {
   };
 
   return (
-    <div className="survey-management-container">
-      <SurveyHierarchy />
+    <div className="main-content">
+        <div className="content-header">
+          <h1>Survey Management</h1>
+          <button className="add-survey-btn"><FontAwesomeIcon icon={faPlus} /> Add Survey</button>
+        </div>
 
-      <div className="content-area">
         <div className="breadcrumb">
           {selectedPath.map((item, index) => (
             <React.Fragment key={index}>
               <span>{item}</span>
-              {index < selectedPath.length - 1 && <span>/</span>}
+              {index < selectedPath.length - 1 && <span> / </span>}
             </React.Fragment>
           ))}
-        </div>
-
-        <div className="content-header">
-          <h1>Survey Management</h1>
-          <button className="add-survey-btn"><FontAwesomeIcon icon={faPlus} /> Add Survey</button>
         </div>
       
         {surveys.length === 0 ? (
@@ -205,7 +208,6 @@ function SurveyProject() {
             </div>
           </div>
         )}
-      </div>
       
       <Snackbar 
         open={toast.open} 
