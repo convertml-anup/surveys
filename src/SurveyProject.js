@@ -33,17 +33,22 @@ function SurveyProject() {
   const [expandedItems, setExpandedItems] = useState({});
   const navigate = useNavigate();
   const location = useLocation();
-  const [selectedPath, setSelectedPath] = useState(location.state?.breadcrumb || ['Retail', 'Two-Wheeler Loan', 'Dealer Walk-In']);
+  const [selectedPath, setSelectedPath] = useState([]);
 
   useEffect(() => {
     fetchSurveys();
   }, []);
 
   useEffect(() => {
-    if (location.state?.breadcrumb) {
+    if (location.state?.breadcrumb && location.state.breadcrumb.length > 0) {
       setSelectedPath(location.state.breadcrumb);
     }
-  }, [location.state]);
+  }, [location]);
+
+  useEffect(() => {
+    console.log('Location state:', location.state);
+    console.log('Breadcrumb:', selectedPath);
+  }, [selectedPath, location.state]);
 
   const fetchSurveys = async () => {
     try {
@@ -138,14 +143,16 @@ function SurveyProject() {
           <button className="add-survey-btn"><FontAwesomeIcon icon={faPlus} /> Add Survey</button>
         </div>
 
-        <div className="breadcrumb">
-          {selectedPath.map((item, index) => (
-            <React.Fragment key={index}>
-              <span>{item}</span>
-              {index < selectedPath.length - 1 && <span> / </span>}
-            </React.Fragment>
-          ))}
-        </div>
+        {selectedPath.length > 0 && (
+          <div className="breadcrumb">
+            {selectedPath.map((item, index) => (
+              <React.Fragment key={index}>
+                <span>{item}</span>
+                {index < selectedPath.length - 1 && <span> / </span>}
+              </React.Fragment>
+            ))}
+          </div>
+        )}
       
         {surveys.length === 0 ? (
           <p>No surveys created yet. Create your first survey!</p>

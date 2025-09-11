@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faStore, faBuilding, faIndustry, faUniversity, faHospital, faSchool, faBriefcase, faDollarSign, faCreditCard, faGem, faWrench, faCog, faHammer, faCar, faTruck, faPlane, faShip, faTrain, faPhone, faLaptop, faChartBar, faChartLine, faChartPie, faPlus, faArrowUp } from '@fortawesome/free-solid-svg-icons';
 
 const SurveyHierarchy = ({ onClose }) => {
   const navigate = useNavigate();
+  const [hierarchy, setHierarchy] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState("");
   const [modalData, setModalData] = useState({});
@@ -36,25 +37,19 @@ const SurveyHierarchy = ({ onClose }) => {
     { icon: faChartLine, name: "Chart Line" },
     { icon: faChartPie, name: "Chart Pie" }
   ];
-  const [hierarchy, setHierarchy] = useState([
-    {
-      id: Date.now(),
-      name: "🏪 Retail",
-      type: "vertical",
-      expanded: false,
-      children: [
-        {
-          id: Date.now() + 1,
-          name: "Two-Wheeler Loan",
-          type: "lob",
-          expanded: false,
-          children: [
-            { id: Date.now() + 2, name: "Dealer Walk-In", type: "touchpoint" },
-          ],
-        },
-      ],
-    },
-  ]);
+
+  useEffect(() => {
+    const savedHierarchy = localStorage.getItem('surveyHierarchy');
+    if (savedHierarchy) {
+      setHierarchy(JSON.parse(savedHierarchy));
+    }
+  }, []);
+
+  useEffect(() => {
+    if (hierarchy.length > 0) {
+      localStorage.setItem('surveyHierarchy', JSON.stringify(hierarchy));
+    }
+  }, [hierarchy]);
 
   const openModal = (type, data = {}) => {
     setModalType(type);
@@ -73,8 +68,8 @@ const SurveyHierarchy = ({ onClose }) => {
     if (!inputValue.trim()) return;
     
     if (modalType === "vertical") {
-      setHierarchy([
-        ...hierarchy,
+      setHierarchy(prev => [
+        ...prev,
         {
           id: Date.now(),
           name: inputValue,
@@ -102,8 +97,8 @@ const SurveyHierarchy = ({ onClose }) => {
       openModal("lob", { verticalId });
       return;
     }
-    setHierarchy(
-      hierarchy.map((v) =>
+    setHierarchy(prev =>
+      prev.map((v) =>
         v.id === verticalId
           ? {
               ...v,
@@ -123,25 +118,13 @@ const SurveyHierarchy = ({ onClose }) => {
     );
   };
 
-  const getTouchpointPath = (touchpointId) => {
-    for (const vertical of hierarchy) {
-      for (const lob of vertical.children) {
-        const touchpoint = lob.children.find(tp => tp.id === touchpointId);
-        if (touchpoint) {
-          return [vertical.name, lob.name, touchpoint.name];
-        }
-      }
-    }
-    return ['Retail', 'Two-Wheeler Loan', 'Dealer Walk-In'];
-  };
-
   const addTouchpoint = (verticalId, lobId, name = null) => {
     if (!name) {
       openModal("touchpoint", { verticalId, lobId });
       return;
     }
-    setHierarchy(
-      hierarchy.map((v) =>
+    setHierarchy(prev =>
+      prev.map((v) =>
         v.id === verticalId
           ? {
               ...v,
@@ -164,7 +147,21 @@ const SurveyHierarchy = ({ onClose }) => {
 
   const toggleExpand = (id, type) => {
     if (type === "touchpoint") {
-      const touchpointPath = getTouchpointPath(id);
+      // Find touchpoint path in current hierarchy
+      let touchpointPath = [];
+      for (const vertical of hierarchy) {
+        if (!vertical.children) continue;
+        for (const lob of vertical.children) {
+          if (!lob.children) continue;
+          const touchpoint = lob.children.find(tp => tp.id === id);
+          if (touchpoint) {
+            touchpointPath = [vertical.name, lob.name, touchpoint.name];
+            break;
+          }
+        }
+        if (touchpointPath.length > 0) break;
+      }
+      console.log('Navigating with breadcrumb:', touchpointPath);
       if (onClose) onClose();
       navigate('/survey-project', { state: { breadcrumb: touchpointPath } });
       return;
@@ -182,7 +179,7 @@ const SurveyHierarchy = ({ onClose }) => {
       });
     };
     
-    setHierarchy(updateNode(hierarchy));
+    setHierarchy(prev => updateNode(prev));
   };
 
   const renderTree = (nodes, level = 0) => {
@@ -223,10 +220,19 @@ const SurveyHierarchy = ({ onClose }) => {
                 style={{ paddingLeft: `${40 + level * 24}px` }}
                 onClick={(e) => {
                   e.stopPropagation();
-                  const vertical = hierarchy.find((v) =>
-                    v.children.some((lob) => lob.id === node.id)
-                  );
-                  addTouchpoint(vertical.id, node.id);
+                  let verticalId = null;
+                  setHierarchy(prev => {
+                    const vertical = prev.find((v) =>
+                      v.children && v.children.some((lob) => lob.id === node.id)
+                    );
+                    if (vertical) {
+                      verticalId = vertical.id;
+                    }
+                    return prev;
+                  });
+                  if (verticalId) {
+                    addTouchpoint(verticalId, node.id);
+                  }
                 }}
               >
                 <FontAwesomeIcon icon={faArrowUp} /> Add Touchpoint
