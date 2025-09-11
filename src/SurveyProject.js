@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlay, faStop, faTrash, faChartBar, faCopy, faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons';
+import { faPlay, faStop, faTrash, faChartBar, faCopy, faChevronLeft, faChevronRight, faPlus } from '@fortawesome/free-solid-svg-icons';
 import { 
   Snackbar, 
   Alert, 
@@ -141,7 +141,7 @@ function SurveyProject() {
 
         <div className="content-header">
           <h1>Survey Management</h1>
-          <button className="add-survey-btn">Add Survey</button>
+          <button className="add-survey-btn"><FontAwesomeIcon icon={faPlus} /> Add Survey</button>
         </div>
       
         {surveys.length === 0 ? (

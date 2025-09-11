@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faStore, faBuilding, faIndustry, faUniversity, faHospital, faSchool, faBriefcase, faDollarSign, faCreditCard, faGem, faWrench, faCog, faHammer, faCar, faTruck, faPlane, faShip, faTrain, faPhone, faLaptop, faChartBar, faChartLine, faChartPie } from '@fortawesome/free-solid-svg-icons';
+import { faStore, faBuilding, faIndustry, faUniversity, faHospital, faSchool, faBriefcase, faDollarSign, faCreditCard, faGem, faWrench, faCog, faHammer, faCar, faTruck, faPlane, faShip, faTrain, faPhone, faLaptop, faChartBar, faChartLine, faChartPie, faPlus, faArrowUp } from '@fortawesome/free-solid-svg-icons';
 
 const SurveyHierarchy = () => {
   const [showModal, setShowModal] = useState(false);
@@ -208,7 +208,7 @@ const SurveyHierarchy = () => {
                   addTouchpoint(vertical.id, node.id);
                 }}
               >
-                ⬆ Add Touchpoint
+                <FontAwesomeIcon icon={faArrowUp} /> Add Touchpoint
               </div>
             )}
 
@@ -221,7 +221,7 @@ const SurveyHierarchy = () => {
                   addLob(node.id);
                 }}
               >
-                ➕ Add Line of Business
+                <FontAwesomeIcon icon={faPlus} /> Add Line of Business
               </div>
             )}
           </li>
@@ -261,7 +261,7 @@ const SurveyHierarchy = () => {
             gap: "8px"
           }}
         >
-          ➕ Add Business Vertical
+          <FontAwesomeIcon icon={faPlus} /> Add Business Vertical
         </button>
       </div>
       
