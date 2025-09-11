@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const hierarchyRoutes = require('./hierarchy');
 require('dotenv').config();
 
 const app = express();
@@ -13,6 +14,18 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/surveys',
   useNewUrlParser: true,
   useUnifiedTopology: true,
 });
+
+// Survey Hierarchy Schema
+const surveyHierarchySchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  icon: String,
+  type: { type: String, enum: ['vertical', 'lob', 'touchpoint'], required: true },
+  parentId: { type: mongoose.Schema.Types.ObjectId, ref: 'SurveyHierarchy' },
+  expanded: { type: Boolean, default: false },
+  createdAt: { type: Date, default: Date.now }
+});
+
+const SurveyHierarchy = mongoose.model('SurveyHierarchy', surveyHierarchySchema);
 
 const surveySchema = new mongoose.Schema({
   title: String,
@@ -126,6 +139,38 @@ app.patch('/api/surveys/:id/toggle', async (req, res) => {
     survey.updatedAt = new Date();
     await survey.save();
     res.json(survey);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Use hierarchy routes
+app.use('/api', hierarchyRoutes);
+
+// Survey Hierarchy Routes
+app.get('/api/survey-hierarchy', async (req, res) => {
+  try {
+    const hierarchy = await SurveyHierarchy.find().sort({ createdAt: 1 });
+    res.json(hierarchy);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/survey-hierarchy', async (req, res) => {
+  try {
+    const hierarchyItem = new SurveyHierarchy(req.body);
+    await hierarchyItem.save();
+    res.status(201).json(hierarchyItem);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+app.delete('/api/survey-hierarchy/:id', async (req, res) => {
+  try {
+    await SurveyHierarchy.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Hierarchy item deleted successfully' });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

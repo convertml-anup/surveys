@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faStore, faBuilding, faIndustry, faUniversity, faHospital, faSchool, faBriefcase, faDollarSign, faCreditCard, faGem, faWrench, faCog, faHammer, faCar, faTruck, faPlane, faShip, faTrain, faPhone, faLaptop, faChartBar, faChartLine, faChartPie, faPlus, faArrowUp } from '@fortawesome/free-solid-svg-icons';
 
@@ -39,17 +40,39 @@ const SurveyHierarchy = ({ onClose }) => {
   ];
 
   useEffect(() => {
-    const savedHierarchy = localStorage.getItem('surveyHierarchy');
-    if (savedHierarchy) {
-      setHierarchy(JSON.parse(savedHierarchy));
-    }
+    fetchHierarchy();
   }, []);
 
-  useEffect(() => {
-    if (hierarchy.length > 0) {
-      localStorage.setItem('surveyHierarchy', JSON.stringify(hierarchy));
+  const fetchHierarchy = async () => {
+    try {
+      const response = await axios.get('http://localhost:5000/api/survey-hierarchy');
+      const hierarchyData = buildHierarchyTree(response.data);
+      setHierarchy(hierarchyData);
+    } catch (error) {
+      console.error('Error fetching hierarchy:', error);
     }
-  }, [hierarchy]);
+  };
+
+  const buildHierarchyTree = (flatData) => {
+    const tree = [];
+    const map = {};
+    
+    flatData.forEach(item => {
+      map[item._id] = { ...item, id: item._id, children: [], expanded: false };
+    });
+    
+    flatData.forEach(item => {
+      if (item.parentId) {
+        if (map[item.parentId]) {
+          map[item.parentId].children.push(map[item._id]);
+        }
+      } else {
+        tree.push(map[item._id]);
+      }
+    });
+    
+    return tree;
+  };
 
   const openModal = (type, data = {}) => {
     setModalType(type);
@@ -64,28 +87,27 @@ const SurveyHierarchy = ({ onClose }) => {
     setSelectedIcon(faStore);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!inputValue.trim()) return;
     
-    if (modalType === "vertical") {
-      setHierarchy(prev => [
-        ...prev,
-        {
-          id: Date.now(),
-          name: inputValue,
-          icon: selectedIcon,
-          type: "vertical",
-          expanded: false,
-          children: [],
-        },
-      ]);
-    } else if (modalType === "lob") {
-      addLob(modalData.verticalId, inputValue);
-    } else if (modalType === "touchpoint") {
-      addTouchpoint(modalData.verticalId, modalData.lobId, inputValue);
+    try {
+      const hierarchyItem = {
+        name: inputValue,
+        type: modalType,
+        parentId: modalType === "lob" ? modalData.verticalId : modalType === "touchpoint" ? modalData.lobId : null
+      };
+      
+      if (modalType === "vertical") {
+        const iconName = iconOptions.find(opt => opt.icon === selectedIcon)?.name.toLowerCase() || 'store';
+        hierarchyItem.icon = iconName;
+      }
+      
+      await axios.post('http://localhost:5000/api/survey-hierarchy', hierarchyItem);
+      await fetchHierarchy();
+      closeModal();
+    } catch (error) {
+      console.error('Error saving hierarchy item:', error);
     }
-    
-    closeModal();
   };
 
   const addVertical = () => {
@@ -97,25 +119,6 @@ const SurveyHierarchy = ({ onClose }) => {
       openModal("lob", { verticalId });
       return;
     }
-    setHierarchy(prev =>
-      prev.map((v) =>
-        v.id === verticalId
-          ? {
-              ...v,
-              children: [
-                ...v.children,
-                {
-                  id: Date.now(),
-                  name,
-                  type: "lob",
-                  expanded: false,
-                  children: [],
-                },
-              ],
-            }
-          : v
-      )
-    );
   };
 
   const addTouchpoint = (verticalId, lobId, name = null) => {
@@ -123,26 +126,6 @@ const SurveyHierarchy = ({ onClose }) => {
       openModal("touchpoint", { verticalId, lobId });
       return;
     }
-    setHierarchy(prev =>
-      prev.map((v) =>
-        v.id === verticalId
-          ? {
-              ...v,
-              children: v.children.map((lob) =>
-                lob.id === lobId
-                  ? {
-                      ...lob,
-                      children: [
-                        ...lob.children,
-                        { id: Date.now(), name, type: "touchpoint" },
-                      ],
-                    }
-                  : lob
-              ),
-            }
-          : v
-      )
-    );
   };
 
   const toggleExpand = (id, type) => {
@@ -205,7 +188,7 @@ const SurveyHierarchy = ({ onClose }) => {
                 </span>
               )}
               <span>
-                {node.icon && <FontAwesomeIcon icon={node.icon} style={{ marginRight: "8px" }} />}
+                {node.icon && <FontAwesomeIcon icon={iconOptions.find(opt => opt.name.toLowerCase() === node.icon)?.icon || faStore} style={{ marginRight: "8px" }} />}
                 {node.name}
               </span>
             </div>
