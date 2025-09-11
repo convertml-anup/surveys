@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChartBar, faClipboardList, faPhone, faBook, faCog } from '@fortawesome/free-solid-svg-icons';
+import { faChartBar, faClipboardList, faPhone, faBook, faCog, faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 import { Snackbar, Alert } from '@mui/material';
 import './styles.css';
@@ -140,6 +140,7 @@ function Sidebar() {
   const location = useLocation();
   const [expandedMenus, setExpandedMenus] = useState({ 'Surveys': true });
   const [showHierarchy, setShowHierarchy] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(false);
 
 
   
@@ -173,78 +174,97 @@ function Sidebar() {
 
   return (
     <div>
-      <div className="sidebar">
-        <div className="logo">
-          <div className="logo-icon"><FontAwesomeIcon icon={faChartBar} /></div>
-          <div className="logo-text">ConvertML</div>
+      <div className={`sidebar ${isMinimized ? 'minimized' : ''}`}>
+        <div className="sidebar-header">
+          <div className="logo">
+            <div className="logo-icon"><FontAwesomeIcon icon={faChartBar} /></div>
+            {!isMinimized && <div className="logo-text">ConvertML</div>}
+          </div>
+          <button 
+            className="sidebar-toggle" 
+            onClick={() => setIsMinimized(!isMinimized)}
+            title={isMinimized ? 'Expand sidebar' : 'Minimize sidebar'}
+          >
+            <FontAwesomeIcon icon={isMinimized ? faChevronRight : faChevronLeft} />
+          </button>
         </div>
         
         <nav>
           <ul className="nav-menu">
             <li className="nav-item">
-              <div className={`nav-link has-children ${expandedMenus['Surveys'] ? 'expanded' : ''} active`} onClick={() => toggleSubMenu('Surveys')}>
+              <div className={`nav-link has-children ${expandedMenus['Surveys'] ? 'expanded' : ''} active`} onClick={() => !isMinimized && toggleSubMenu('Surveys')} title="Surveys">
                 <span className="nav-icon"><FontAwesomeIcon icon={faClipboardList} /></span>
-                Surveys
+                {!isMinimized && 'Surveys'}
               </div>
-              <ul className={`sub-menu ${expandedMenus['Surveys'] ? 'expanded' : ''}`}>
-                {['Create Survey', 'Survey Management', 'Survey Distribution', 'Survey Responses', 'Survey Settings'].map(item => (
-                  <li key={item} className={`sub-menu-item ${getActiveSubMenuItem() === item ? 'active' : ''}`} onClick={() => handleSubMenuClick(item)}>
-                    {item}
-                  </li>
-                ))}
-              </ul>
+              {!isMinimized && (
+                <ul className={`sub-menu ${expandedMenus['Surveys'] ? 'expanded' : ''}`}>
+                  {['Create Survey', 'Survey Management', 'Survey Distribution', 'Survey Responses', 'Survey Settings'].map(item => (
+                    <li key={item} className={`sub-menu-item ${getActiveSubMenuItem() === item ? 'active' : ''}`} onClick={() => handleSubMenuClick(item)}>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              )}
             </li>
             <li className="nav-item">
-              <div className={`nav-link has-children ${expandedMenus['Analytics'] ? 'expanded' : ''}`} onClick={() => toggleSubMenu('Analytics')}>
+              <div className={`nav-link has-children ${expandedMenus['Analytics'] ? 'expanded' : ''}`} onClick={() => !isMinimized && toggleSubMenu('Analytics')} title="Analytics">
                 <span className="nav-icon"><FontAwesomeIcon icon={faChartBar} /></span>
-                Analytics
+                {!isMinimized && 'Analytics'}
               </div>
-              <ul className={`sub-menu ${expandedMenus['Analytics'] ? 'expanded' : ''}`}>
-                {['Dashboard', 'Survey Analytics', 'Reports Generation', 'Segmentation & Take Action'].map(item => (
-                  <li key={item} className={`sub-menu-item ${getActiveSubMenuItem() === item ? 'active' : ''}`} onClick={() => handleSubMenuClick(item)}>
-                    {item}
-                  </li>
-                ))}
-              </ul>
+              {!isMinimized && (
+                <ul className={`sub-menu ${expandedMenus['Analytics'] ? 'expanded' : ''}`}>
+                  {['Dashboard', 'Survey Analytics', 'Reports Generation', 'Segmentation & Take Action'].map(item => (
+                    <li key={item} className={`sub-menu-item ${getActiveSubMenuItem() === item ? 'active' : ''}`} onClick={() => handleSubMenuClick(item)}>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              )}
             </li>
             <li className="nav-item">
-              <div className={`nav-link has-children ${expandedMenus['Callbacks'] ? 'expanded' : ''}`} onClick={() => toggleSubMenu('Callbacks')}>
+              <div className={`nav-link has-children ${expandedMenus['Callbacks'] ? 'expanded' : ''}`} onClick={() => !isMinimized && toggleSubMenu('Callbacks')} title="Callbacks">
                 <span className="nav-icon"><FontAwesomeIcon icon={faPhone} /></span>
-                Callbacks
+                {!isMinimized && 'Callbacks'}
               </div>
-              <ul className={`sub-menu ${expandedMenus['Callbacks'] ? 'expanded' : ''}`}>
-                {['Callback Requests', 'Callback Scheduler', 'Call History'].map(item => (
-                  <li key={item} className={`sub-menu-item ${getActiveSubMenuItem() === item ? 'active' : ''}`} onClick={() => handleSubMenuClick(item)}>
-                    {item}
-                  </li>
-                ))}
-              </ul>
+              {!isMinimized && (
+                <ul className={`sub-menu ${expandedMenus['Callbacks'] ? 'expanded' : ''}`}>
+                  {['Callback Requests', 'Callback Scheduler', 'Call History'].map(item => (
+                    <li key={item} className={`sub-menu-item ${getActiveSubMenuItem() === item ? 'active' : ''}`} onClick={() => handleSubMenuClick(item)}>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              )}
             </li>
             <li className="nav-item">
-              <div className={`nav-link has-children ${expandedMenus['Resources'] ? 'expanded' : ''}`} onClick={() => toggleSubMenu('Resources')}>
+              <div className={`nav-link has-children ${expandedMenus['Resources'] ? 'expanded' : ''}`} onClick={() => !isMinimized && toggleSubMenu('Resources')} title="Resources">
                 <span className="nav-icon"><FontAwesomeIcon icon={faBook} /></span>
-                Resources
+                {!isMinimized && 'Resources'}
               </div>
-              <ul className={`sub-menu ${expandedMenus['Resources'] ? 'expanded' : ''}`}>
-                {['Guides & Tutorials', 'Help Center', 'Community & Support'].map(item => (
-                  <li key={item} className={`sub-menu-item ${getActiveSubMenuItem() === item ? 'active' : ''}`} onClick={() => handleSubMenuClick(item)}>
-                    {item}
-                  </li>
-                ))}
-              </ul>
+              {!isMinimized && (
+                <ul className={`sub-menu ${expandedMenus['Resources'] ? 'expanded' : ''}`}>
+                  {['Guides & Tutorials', 'Help Center', 'Community & Support'].map(item => (
+                    <li key={item} className={`sub-menu-item ${getActiveSubMenuItem() === item ? 'active' : ''}`} onClick={() => handleSubMenuClick(item)}>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              )}
             </li>
             <li className="nav-item">
-              <div className={`nav-link has-children ${expandedMenus['Settings'] ? 'expanded' : ''}`} onClick={() => toggleSubMenu('Settings')}>
+              <div className={`nav-link has-children ${expandedMenus['Settings'] ? 'expanded' : ''}`} onClick={() => !isMinimized && toggleSubMenu('Settings')} title="Settings">
                 <span className="nav-icon"><FontAwesomeIcon icon={faCog} /></span>
-                Settings
+                {!isMinimized && 'Settings'}
               </div>
-              <ul className={`sub-menu ${expandedMenus['Settings'] ? 'expanded' : ''}`}>
-                {['User Profile', 'Team Management', 'Integrations', 'Billing & Usage'].map(item => (
-                  <li key={item} className={`sub-menu-item ${getActiveSubMenuItem() === item ? 'active' : ''}`} onClick={() => handleSubMenuClick(item)}>
-                    {item}
-                  </li>
-                ))}
-              </ul>
+              {!isMinimized && (
+                <ul className={`sub-menu ${expandedMenus['Settings'] ? 'expanded' : ''}`}>
+                  {['User Profile', 'Team Management', 'Integrations', 'Billing & Usage'].map(item => (
+                    <li key={item} className={`sub-menu-item ${getActiveSubMenuItem() === item ? 'active' : ''}`} onClick={() => handleSubMenuClick(item)}>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              )}
             </li>
           </ul>
         </nav>
@@ -252,7 +272,7 @@ function Sidebar() {
       {showHierarchy && (
         <div style={{
           position: 'fixed',
-          left: '280px',
+          left: isMinimized ? '60px' : '280px',
           top: '0',
           width: '384px',
           height: '100vh',
@@ -271,9 +291,10 @@ function Sidebar() {
 function AppContent({ config }) {
   const location = useLocation();
   const isSurveyView = location.pathname.startsWith('/survey/');
+  const [sidebarMinimized, setSidebarMinimized] = useState(false);
 
   return (
-    <div>
+    <div className={sidebarMinimized ? 'sidebar-minimized' : ''}>
       {!isSurveyView && <Sidebar />}
       <Routes>
         <Route path="/" element={<Dashboard />} />

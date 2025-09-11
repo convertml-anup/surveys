@@ -169,8 +169,22 @@ app.post('/api/survey-hierarchy', async (req, res) => {
 
 app.delete('/api/survey-hierarchy/:id', async (req, res) => {
   try {
-    await SurveyHierarchy.findByIdAndDelete(req.params.id);
-    res.json({ message: 'Hierarchy item deleted successfully' });
+    // Recursive function to delete node and all its children
+    const deleteNodeAndChildren = async (nodeId) => {
+      // Find all children of this node
+      const children = await SurveyHierarchy.find({ parentId: nodeId });
+      
+      // Recursively delete all children
+      for (const child of children) {
+        await deleteNodeAndChildren(child._id);
+      }
+      
+      // Delete the node itself
+      await SurveyHierarchy.findByIdAndDelete(nodeId);
+    };
+    
+    await deleteNodeAndChildren(req.params.id);
+    res.json({ message: 'Hierarchy item and all children deleted successfully' });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

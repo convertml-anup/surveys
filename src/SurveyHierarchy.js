@@ -12,6 +12,7 @@ const SurveyHierarchy = ({ onClose }) => {
   const [modalData, setModalData] = useState({});
   const [inputValue, setInputValue] = useState("");
   const [selectedIcon, setSelectedIcon] = useState(faStore);
+  const [contextMenu, setContextMenu] = useState({ show: false, x: 0, y: 0, nodeId: null, nodeName: '' });
   
   const iconOptions = [
     { icon: faStore, name: "Store" },
@@ -128,6 +129,45 @@ const SurveyHierarchy = ({ onClose }) => {
     }
   };
 
+  const handleRightClick = (e, nodeId, nodeName) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setContextMenu({
+      show: true,
+      x: e.clientX,
+      y: e.clientY,
+      nodeId,
+      nodeName
+    });
+  };
+
+  const handleDeleteNode = async () => {
+    if (window.confirm(`Are you sure you want to delete "${contextMenu.nodeName}"? This will also delete all its children.`)) {
+      try {
+        await axios.delete(`http://localhost:5000/api/survey-hierarchy/${contextMenu.nodeId}`);
+        await fetchHierarchy();
+        setContextMenu({ show: false, x: 0, y: 0, nodeId: null, nodeName: '' });
+      } catch (error) {
+        console.error('Error deleting hierarchy item:', error);
+      }
+    }
+  };
+
+  const closeContextMenu = () => {
+    setContextMenu({ show: false, x: 0, y: 0, nodeId: null, nodeName: '' });
+  };
+
+  // Close context menu when clicking elsewhere
+  useEffect(() => {
+    const handleClickOutside = () => {
+      if (contextMenu.show) {
+        closeContextMenu();
+      }
+    };
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [contextMenu.show]);
+
   const toggleExpand = (id, type) => {
     if (type === "touchpoint") {
       // Find touchpoint path in current hierarchy
@@ -176,6 +216,7 @@ const SurveyHierarchy = ({ onClose }) => {
               }`}
               style={{ paddingLeft: `${16 + level * 24}px` }}
               onClick={() => toggleExpand(node.id, node.type)}
+              onContextMenu={(e) => handleRightClick(e, node.id || node._id, node.name)}
             >
               {node.type !== "touchpoint" && (
                 <span
@@ -378,6 +419,32 @@ const SurveyHierarchy = ({ onClose }) => {
               </button>
             </div>
           </div>
+        </div>
+      )}
+      
+      {/* Context Menu */}
+      {contextMenu.show && (
+        <div
+          style={{
+            position: 'fixed',
+            top: contextMenu.y,
+            left: contextMenu.x,
+            backgroundColor: 'white',
+            border: '1px solid #e5e7eb',
+            borderRadius: '6px',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+            zIndex: 2000,
+            minWidth: '120px'
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            className="context-menu-item delete"
+            onClick={handleDeleteNode}
+          >
+            <span className="context-menu-icon">🗑️</span>
+            Delete
+          </button>
         </div>
       )}
     </div>
