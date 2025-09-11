@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlay, faStop, faTrash, faChartBar, faCopy } from '@fortawesome/free-solid-svg-icons';
+import { faPlay, faStop, faTrash, faChartBar, faCopy, faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons';
 import { 
   Snackbar, 
   Alert, 
@@ -29,6 +29,9 @@ function SurveyProject() {
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState({ open: false, message: '', severity: 'success' });
   const [deleteDialog, setDeleteDialog] = useState({ open: false, survey: null });
+
+  const [expandedItems, setExpandedItems] = useState({});
+  const [selectedPath, setSelectedPath] = useState(['Retail', 'Two-Wheeler Loan', 'Dealer Walk-In']);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -110,84 +113,164 @@ function SurveyProject() {
     );
   }
 
+  const toggleTreeItem = (itemKey) => {
+    setExpandedItems(prev => ({
+      ...prev,
+      [itemKey]: !prev[itemKey]
+    }));
+  };
+
+  const selectTreeItem = (path) => {
+    setSelectedPath(path);
+  };
+
   return (
-    <div className="main-content">
-      <h1>Survey Management</h1>
-      <p>Manage your survey projects and templates here.</p>
+    <div className="survey-management-container">
+      <div className="hierarchy-panel">
+        <div className="hierarchy-header">
+          <h3>Survey Hierarchy</h3>
+        </div>
+        
+        <div className="hierarchy-tree">
+            <ul className="tree-root">
+              <li className="tree-item">
+                <div className={`tree-toggle business-vertical ${expandedItems.retail ? 'expanded' : ''}`} 
+                     onClick={() => toggleTreeItem('retail')}>
+                  <span className="tree-arrow">▶</span>
+                  <span>🏪 Retail</span>
+                </div>
+                <ul className={`tree-children ${expandedItems.retail ? 'expanded' : ''}`}>
+                  <li className="tree-item">
+                    <div className={`tree-toggle ${expandedItems.twoWheeler ? 'expanded' : ''}`} 
+                         onClick={() => toggleTreeItem('twoWheeler')}>
+                      <span className="tree-arrow">▶</span>
+                      <span>Two-Wheeler Loan</span>
+                    </div>
+                    <ul className={`tree-children ${expandedItems.twoWheeler ? 'expanded' : ''}`}>
+                      <li className="tree-item">
+                        <div className="tree-toggle touchpoint active" 
+                             onClick={() => selectTreeItem(['Retail', 'Two-Wheeler Loan', 'Dealer Walk-In'])}>
+                          <span>📍 Dealer Walk-In</span>
+                        </div>
+                      </li>
+                      <div className="add-touchpoint">⬆ Add Touchpoint</div>
+                    </ul>
+                  </li>
+                  <li className="tree-item">
+                    <div className="tree-toggle" onClick={() => toggleTreeItem('personalLoan')}>
+                      <span className="tree-arrow">▶</span>
+                      <span>Personal Loan</span>
+                    </div>
+                    <ul className={`tree-children ${expandedItems.personalLoan ? 'expanded' : ''}`}>
+                      <div className="add-touchpoint">⬆ Add Touchpoint</div>
+                    </ul>
+                  </li>
+                  <div className="add-lob">➕ Add Line of Business</div>
+                </ul>
+              </li>
+              
+              <li className="tree-item">
+                <div className={`tree-toggle business-vertical ${expandedItems.consumer ? 'expanded' : ''}`} 
+                     onClick={() => toggleTreeItem('consumer')}>
+                  <span className="tree-arrow">▶</span>
+                  <span>👥 Consumer</span>
+                </div>
+                <ul className={`tree-children ${expandedItems.consumer ? 'expanded' : ''}`}>
+                  <div className="add-lob">➕ Add Line of Business</div>
+                </ul>
+              </li>
+              
+              <li className="tree-item">
+                <div className={`tree-toggle business-vertical ${expandedItems.commercial ? 'expanded' : ''}`} 
+                     onClick={() => toggleTreeItem('commercial')}>
+                  <span className="tree-arrow">▶</span>
+                  <span>🏢 Commercial</span>
+                </div>
+                <ul className={`tree-children ${expandedItems.commercial ? 'expanded' : ''}`}>
+                  <div className="add-lob">➕ Add Line of Business</div>
+                </ul>
+              </li>
+            </ul>
+        </div>
+      </div>
+
+      <div className="content-area">
+        <div className="breadcrumb">
+          {selectedPath.map((item, index) => (
+            <React.Fragment key={index}>
+              <span>{item}</span>
+              {index < selectedPath.length - 1 && <span>/</span>}
+            </React.Fragment>
+          ))}
+        </div>
+
+        <div className="content-header">
+          <h1>Survey Management</h1>
+          <button className="add-survey-btn">Add Survey</button>
+        </div>
       
-      {surveys.length === 0 ? (
-        <p>No surveys created yet. Create your first survey!</p>
-      ) : (
-        <TableContainer component={Paper} sx={{ mt: 2 }}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Title</TableCell>
-                <TableCell>Description</TableCell>
-                <TableCell align="center">Total Responses</TableCell>
-                <TableCell>Created At</TableCell>
-                <TableCell>Updated At</TableCell>
-                <TableCell align="center">Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {surveys.map((survey) => (
-                <TableRow key={survey._id} hover>
-                  <TableCell>{survey.title}</TableCell>
-                  <TableCell>{survey.description}</TableCell>
-                  <TableCell align="center">
-                    <Chip 
-                      label={survey.responseCount || 0}
-                      color={survey.responseCount > 0 ? 'success' : 'default'}
-                      size="small"
-                    />
-                  </TableCell>
-                  <TableCell>{new Date(survey.createdAt).toLocaleDateString()}</TableCell>
-                  <TableCell>{new Date(survey.updatedAt).toLocaleDateString()}</TableCell>
-                  <TableCell align="center">
-                    <Tooltip title={survey.isRunning ? 'Stop Survey' : 'Run Survey'}>
-                      <IconButton 
-                        onClick={() => handleRun(survey)}
-                        color={survey.isRunning ? 'error' : 'success'}
-                        size="small"
-                      >
-                        <FontAwesomeIcon icon={survey.isRunning ? faStop : faPlay} />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="View Results">
-                      <IconButton 
-                        onClick={() => handleResults(survey)}
-                        color="primary"
-                        size="small"
-                      >
-                        <FontAwesomeIcon icon={faChartBar} />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Copy Shareable URL">
-                      <IconButton 
-                        onClick={() => handleCopy(survey)}
-                        color="default"
-                        size="small"
-                      >
-                        <FontAwesomeIcon icon={faCopy} />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Delete Survey">
-                      <IconButton 
-                        onClick={() => handleDeleteClick(survey)}
-                        color="error"
-                        size="small"
-                      >
-                        <FontAwesomeIcon icon={faTrash} />
-                      </IconButton>
-                    </Tooltip>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      )}
+        {surveys.length === 0 ? (
+          <p>No surveys created yet. Create your first survey!</p>
+        ) : (
+          <div className="survey-table">
+            <div className="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Survey Name</th>
+                    <th>Status</th>
+                    <th>Last Modified</th>
+                    <th>Template</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {surveys.map((survey) => (
+                    <tr key={survey._id}>
+                      <td className="survey-name">{survey.title}</td>
+                      <td>
+                        <span className={`status-badge ${survey.isRunning ? 'status-active' : 'status-draft'}`}>
+                          <span className="status-dot"></span>
+                          {survey.isRunning ? 'Active' : 'Draft'}
+                        </span>
+                      </td>
+                      <td>{new Date(survey.updatedAt).toLocaleDateString()}</td>
+                      <td>{survey.description || 'Custom Template'}</td>
+                      <td>
+                        <div className="action-buttons">
+                          <Tooltip title={survey.isRunning ? 'Stop Survey' : 'Run Survey'}>
+                            <button 
+                              className={`action-btn ${survey.isRunning ? '' : 'primary'}`}
+                              onClick={() => handleRun(survey)}
+                            >
+                              {survey.isRunning ? 'Stop' : 'Run'}
+                            </button>
+                          </Tooltip>
+                          <Tooltip title="View Results">
+                            <button className="action-btn" onClick={() => handleResults(survey)}>
+                              Results
+                            </button>
+                          </Tooltip>
+                          <Tooltip title="Copy Shareable URL">
+                            <button className="action-btn" onClick={() => handleCopy(survey)}>
+                              Copy
+                            </button>
+                          </Tooltip>
+                          <Tooltip title="Delete Survey">
+                            <button className="action-btn delete" onClick={() => handleDeleteClick(survey)}>
+                              Delete
+                            </button>
+                          </Tooltip>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </div>
       
       <Snackbar 
         open={toast.open} 
