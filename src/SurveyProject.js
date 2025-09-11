@@ -23,6 +23,7 @@ import {
   IconButton,
   Tooltip
 } from '@mui/material';
+import SurveyHierarchy from './SurveyHierarchy';
 
 function SurveyProject() {
   const [surveys, setSurveys] = useState([]);
@@ -126,73 +127,7 @@ function SurveyProject() {
 
   return (
     <div className="survey-management-container">
-      <div className="hierarchy-panel">
-        <div className="hierarchy-header">
-          <h3>Survey Hierarchy</h3>
-        </div>
-        
-        <div className="hierarchy-tree">
-            <ul className="tree-root">
-              <li className="tree-item">
-                <div className={`tree-toggle business-vertical ${expandedItems.retail ? 'expanded' : ''}`} 
-                     onClick={() => toggleTreeItem('retail')}>
-                  <span className="tree-arrow">▶</span>
-                  <span>🏪 Retail</span>
-                </div>
-                <ul className={`tree-children ${expandedItems.retail ? 'expanded' : ''}`}>
-                  <li className="tree-item">
-                    <div className={`tree-toggle ${expandedItems.twoWheeler ? 'expanded' : ''}`} 
-                         onClick={() => toggleTreeItem('twoWheeler')}>
-                      <span className="tree-arrow">▶</span>
-                      <span>Two-Wheeler Loan</span>
-                    </div>
-                    <ul className={`tree-children ${expandedItems.twoWheeler ? 'expanded' : ''}`}>
-                      <li className="tree-item">
-                        <div className="tree-toggle touchpoint active" 
-                             onClick={() => selectTreeItem(['Retail', 'Two-Wheeler Loan', 'Dealer Walk-In'])}>
-                          <span>📍 Dealer Walk-In</span>
-                        </div>
-                      </li>
-                      <div className="add-touchpoint">⬆ Add Touchpoint</div>
-                    </ul>
-                  </li>
-                  <li className="tree-item">
-                    <div className="tree-toggle" onClick={() => toggleTreeItem('personalLoan')}>
-                      <span className="tree-arrow">▶</span>
-                      <span>Personal Loan</span>
-                    </div>
-                    <ul className={`tree-children ${expandedItems.personalLoan ? 'expanded' : ''}`}>
-                      <div className="add-touchpoint">⬆ Add Touchpoint</div>
-                    </ul>
-                  </li>
-                  <div className="add-lob">➕ Add Line of Business</div>
-                </ul>
-              </li>
-              
-              <li className="tree-item">
-                <div className={`tree-toggle business-vertical ${expandedItems.consumer ? 'expanded' : ''}`} 
-                     onClick={() => toggleTreeItem('consumer')}>
-                  <span className="tree-arrow">▶</span>
-                  <span>👥 Consumer</span>
-                </div>
-                <ul className={`tree-children ${expandedItems.consumer ? 'expanded' : ''}`}>
-                  <div className="add-lob">➕ Add Line of Business</div>
-                </ul>
-              </li>
-              
-              <li className="tree-item">
-                <div className={`tree-toggle business-vertical ${expandedItems.commercial ? 'expanded' : ''}`} 
-                     onClick={() => toggleTreeItem('commercial')}>
-                  <span className="tree-arrow">▶</span>
-                  <span>🏢 Commercial</span>
-                </div>
-                <ul className={`tree-children ${expandedItems.commercial ? 'expanded' : ''}`}>
-                  <div className="add-lob">➕ Add Line of Business</div>
-                </ul>
-              </li>
-            </ul>
-        </div>
-      </div>
+      <SurveyHierarchy />
 
       <div className="content-area">
         <div className="breadcrumb">

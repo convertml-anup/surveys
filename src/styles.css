@@ -806,3 +806,10 @@ body {
         height: 60px;
     }
 }
+.survey-hierarchy {
+    width: 384px;
+    background: white;
+    border-right: 1px solid #e5e7eb;
+    overflow-y: auto;
+    height: 100vh;
+}
