@@ -112,7 +112,7 @@ function SurveyProject() {
 
   return (
     <div className="main-content">
-      <h1>Survey Project</h1>
+      <h1>Survey Management</h1>
       <p>Manage your survey projects and templates here.</p>
       
       {surveys.length === 0 ? (

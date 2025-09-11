@@ -150,7 +150,7 @@ function Sidebar() {
 
   const getActiveSubMenuItem = () => {
     if (location.pathname === '/create-survey') return 'Create Survey';
-    if (location.pathname === '/survey-project') return 'Survey Project';
+    if (location.pathname === '/survey-project') return 'Survey Management';
     if (location.pathname === '/dashboard') return 'Dashboard';
     if (location.pathname === '/survey-analytics') return 'Survey Analytics';
     return 'Dashboard';
@@ -159,7 +159,7 @@ function Sidebar() {
   const handleSubMenuClick = (item) => {
     if (item === 'Create Survey') {
       navigate('/create-survey');
-    } else if (item === 'Survey Project') {
+    } else if (item === 'Survey Management') {
       navigate('/survey-project');
     } else if (item === 'Dashboard') {
       navigate('/dashboard');
@@ -184,7 +184,7 @@ function Sidebar() {
                 Surveys
               </div>
               <ul className={`sub-menu ${expandedMenus['Surveys'] ? 'expanded' : ''}`}>
-                {['Create Survey', 'Survey Project', 'Survey Distribution', 'Survey Responses', 'Survey Settings'].map(item => (
+                {['Create Survey', 'Survey Management', 'Survey Distribution', 'Survey Responses', 'Survey Settings'].map(item => (
                   <li key={item} className={`sub-menu-item ${getActiveSubMenuItem() === item ? 'active' : ''}`} onClick={() => handleSubMenuClick(item)}>
                     {item}
                   </li>

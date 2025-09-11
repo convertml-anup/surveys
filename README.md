@@ -36,5 +36,5 @@ Application will run on http://localhost:3000
 ## Features
 - Create surveys using SurveyJS Creator
 - Save surveys to MongoDB
-- View all created surveys in Survey Project page
+- View all created surveys in Survey Management page
 - Table view with survey details and timestamps
