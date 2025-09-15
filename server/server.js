@@ -32,6 +32,9 @@ const surveySchema = new mongoose.Schema({
   description: String,
   surveyJson: Object,
   isRunning: { type: Boolean, default: false },
+  verticalId: { type: mongoose.Schema.Types.ObjectId, ref: 'SurveyHierarchy' },
+  lobId: { type: mongoose.Schema.Types.ObjectId, ref: 'SurveyHierarchy' },
+  touchpointId: { type: mongoose.Schema.Types.ObjectId, ref: 'SurveyHierarchy' },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 });
@@ -57,7 +60,11 @@ app.post('/api/surveys', async (req, res) => {
 
 app.get('/api/surveys', async (req, res) => {
   try {
+    const { touchpointId } = req.query;
+    const matchStage = touchpointId ? { touchpointId: new mongoose.Types.ObjectId(touchpointId) } : {};
+    
     const surveys = await Survey.aggregate([
+      { $match: matchStage },
       {
         $lookup: {
           from: 'responses',
@@ -67,13 +74,43 @@ app.get('/api/surveys', async (req, res) => {
         }
       },
       {
+        $lookup: {
+          from: 'surveyhierarchies',
+          localField: 'verticalId',
+          foreignField: '_id',
+          as: 'vertical'
+        }
+      },
+      {
+        $lookup: {
+          from: 'surveyhierarchies',
+          localField: 'lobId',
+          foreignField: '_id',
+          as: 'lob'
+        }
+      },
+      {
+        $lookup: {
+          from: 'surveyhierarchies',
+          localField: 'touchpointId',
+          foreignField: '_id',
+          as: 'touchpoint'
+        }
+      },
+      {
         $addFields: {
-          responseCount: { $size: '$responses' }
+          responseCount: { $size: '$responses' },
+          verticalName: { $arrayElemAt: ['$vertical.name', 0] },
+          lobName: { $arrayElemAt: ['$lob.name', 0] },
+          touchpointName: { $arrayElemAt: ['$touchpoint.name', 0] }
         }
       },
       {
         $project: {
-          responses: 0
+          responses: 0,
+          vertical: 0,
+          lob: 0,
+          touchpoint: 0
         }
       },
       {

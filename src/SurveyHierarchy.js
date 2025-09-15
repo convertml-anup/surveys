@@ -59,7 +59,7 @@ const SurveyHierarchy = ({ onClose }) => {
     const map = {};
     
     flatData.forEach(item => {
-      map[item._id] = { ...item, id: item._id, children: [], expanded: false };
+      map[item._id] = { ...item, id: item._id, children: [], expanded: true };
     });
     
     flatData.forEach(item => {
@@ -186,7 +186,30 @@ const SurveyHierarchy = ({ onClose }) => {
       }
       console.log('Navigating with breadcrumb:', touchpointPath);
       if (onClose) onClose();
-      navigate('/survey-project', { state: { breadcrumb: touchpointPath } });
+      // Find parent IDs for the touchpoint
+      let verticalId = null, lobId = null;
+      for (const vertical of hierarchy) {
+        if (!vertical.children) continue;
+        for (const lob of vertical.children) {
+          if (!lob.children) continue;
+          const touchpoint = lob.children.find(tp => tp.id === id);
+          if (touchpoint) {
+            verticalId = vertical.id;
+            lobId = lob.id;
+            break;
+          }
+        }
+        if (verticalId) break;
+      }
+      
+      navigate('/survey-project', { 
+        state: { 
+          breadcrumb: touchpointPath, 
+          touchpointId: id,
+          verticalId: verticalId,
+          lobId: lobId
+        } 
+      });
       return;
     }
     

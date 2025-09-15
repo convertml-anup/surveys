@@ -23,7 +23,7 @@ import {
   IconButton,
   Tooltip
 } from '@mui/material';
-
+import SurveyHierarchy from './SurveyHierarchy';
 
 function SurveyProject() {
   const [surveys, setSurveys] = useState([]);
@@ -36,8 +36,9 @@ function SurveyProject() {
   const [selectedPath, setSelectedPath] = useState([]);
 
   useEffect(() => {
-    fetchSurveys();
-  }, []);
+    const touchpointId = location.state?.touchpointId;
+    fetchSurveys(touchpointId);
+  }, [location.state?.touchpointId]);
 
   useEffect(() => {
     if (location.state?.breadcrumb && location.state.breadcrumb.length > 0) {
@@ -50,9 +51,12 @@ function SurveyProject() {
     console.log('Breadcrumb:', selectedPath);
   }, [selectedPath, location.state]);
 
-  const fetchSurveys = async () => {
+  const fetchSurveys = async (touchpointId = null) => {
     try {
-      const response = await axios.get('http://localhost:5000/api/surveys');
+      const url = touchpointId 
+        ? `http://localhost:5000/api/surveys?touchpointId=${touchpointId}`
+        : 'http://localhost:5000/api/surveys';
+      const response = await axios.get(url);
       setSurveys(response.data);
     } catch (error) {
       console.error('Error fetching surveys:', error);
@@ -137,10 +141,12 @@ function SurveyProject() {
   };
 
   return (
-    <div className="main-content">
+    <div className="survey-management-container">
+      <SurveyHierarchy />
+      <div className="content-area">
         <div className="content-header">
           <h1>Survey Management</h1>
-          <button className="add-survey-btn"><FontAwesomeIcon icon={faPlus} /> Add Survey</button>
+          <button className="add-survey-btn" onClick={() => navigate('/create-survey', { state: { verticalId: location.state?.verticalId, lobId: location.state?.lobId, touchpointId: location.state?.touchpointId } })}><FontAwesomeIcon icon={faPlus} /> Add Survey</button>
         </div>
 
         {selectedPath.length > 0 && (
@@ -165,7 +171,7 @@ function SurveyProject() {
                     <th>Survey Name</th>
                     <th>Status</th>
                     <th>Last Modified</th>
-                    <th>Template</th>
+                    <th>Touchpoint</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -180,7 +186,7 @@ function SurveyProject() {
                         </span>
                       </td>
                       <td>{new Date(survey.updatedAt).toLocaleDateString()}</td>
-                      <td>{survey.description || 'Custom Template'}</td>
+                      <td>{survey.touchpointName || 'Not Assigned'}</td>
                       <td>
                         <div className="action-buttons">
                           <Tooltip title={survey.isRunning ? 'Stop Survey' : 'Run Survey'}>
@@ -250,6 +256,7 @@ function SurveyProject() {
           </Button>
         </DialogActions>
       </Dialog>
+      </div>
     </div>
   );
 }
