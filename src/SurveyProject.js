@@ -142,7 +142,7 @@ function SurveyProject() {
 
   return (
     <div className="survey-management-container">
-      <SurveyHierarchy />
+      <SurveyHierarchy selectedTouchpointId={location.state?.touchpointId} />
       <div className="content-area">
         <div className="content-header">
           <h1>Survey Management</h1>

@@ -4,7 +4,7 @@ import axios from 'axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faStore, faBuilding, faIndustry, faUniversity, faHospital, faSchool, faBriefcase, faDollarSign, faCreditCard, faGem, faWrench, faCog, faHammer, faCar, faTruck, faPlane, faShip, faTrain, faPhone, faLaptop, faChartBar, faChartLine, faChartPie, faPlus, faArrowUp } from '@fortawesome/free-solid-svg-icons';
 
-const SurveyHierarchy = ({ onClose }) => {
+const SurveyHierarchy = ({ onClose, selectedTouchpointId }) => {
   const navigate = useNavigate();
   const [hierarchy, setHierarchy] = useState([]);
   const [showModal, setShowModal] = useState(false);
@@ -235,7 +235,9 @@ const SurveyHierarchy = ({ onClose }) => {
           <li key={node.id} className="mb-1">
             <div
               className={`tree-toggle flex items-center gap-2 p-2 cursor-pointer rounded font-medium hover:bg-gray-100 ${
-                node.type === "touchpoint" ? "text-blue-600 hover:bg-blue-50" : "text-gray-700"
+                node.type === "touchpoint" 
+                  ? (selectedTouchpointId === node.id ? "active text-white bg-blue-600" : "text-blue-600 hover:bg-blue-50")
+                  : "text-gray-700"
               }`}
               style={{ paddingLeft: `${16 + level * 24}px` }}
               onClick={() => toggleExpand(node.id, node.type)}
